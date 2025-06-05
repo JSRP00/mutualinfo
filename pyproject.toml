@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mutualinfo"
+version = "0.1.0"
+description = "Librería para estimar la información mutua y cuantificar su incertidumbre"
+authors = [
+    { name = "Tu Nombre", email = "tu.email@example.com" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.7",
+    "scikit-learn>=1.0",
+    "matplotlib>=3.5"
+]
+
+[tool.setuptools]
+packages = ["mutualinfo"]
+
+[tool.setuptools.package-data]
+"mutualinfo" = ["*.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
