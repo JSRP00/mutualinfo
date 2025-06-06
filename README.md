@@ -28,7 +28,7 @@ El objetivo principal es facilitar el análisis de relaciones estadísticas entr
 
 ### Clonación del repositorio
 ```bash
-git clone https://github.com/tu_usuario/mutualinfo.git
+git clone https://github.com/JSRP00/mutualinfo.git
 cd mutualinfo
 pip install -e .
 
