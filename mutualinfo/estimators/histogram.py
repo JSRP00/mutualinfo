@@ -1,4 +1,4 @@
-# mutualinfo/estimators/histograms.py
+# mutualinfo/estimators/histogram.py
 
 import numpy as np
 
