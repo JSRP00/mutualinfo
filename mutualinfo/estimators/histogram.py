@@ -2,7 +2,7 @@
 
 import numpy as np
 
-def estimate_mi_histogram(x, y, bins=10):
+def estimate_mi(x, y, bins=10):
     """
     Estima la información mutua I(X;Y) usando histogramas 2D.
 
