@@ -35,19 +35,27 @@ def set_random_seed(seed):
     np.random.seed(seed)
 
 
-def generate_dependent_data(n=1000, noise=0.1, seed=None):
+def generate_dependent_data(n=1000, relation="nonlinear", noise=0.1, seed=None):
     """
-    Genera datos dependientes x → y = sin(2πx) + ruido
+    Genera datos dependientes entre x e y.
 
-    Retorna:
-    --------
-    x, y : arrays de shape (n_samples,)
+    Parámetros:
+    -----------
+    relation : str
+        Tipo de relación ('linear' o 'nonlinear')
     """
     if seed is not None:
         set_random_seed(seed)
 
     x = np.random.uniform(0, 1, n)
-    y = np.sin(2 * np.pi * x) + noise * np.random.randn(n)
+
+    if relation == "linear":
+        y = 2 * x + noise * np.random.randn(n)
+    elif relation == "nonlinear":
+        y = np.sin(2 * np.pi * x) + noise * np.random.randn(n)
+    else:
+        raise ValueError("relation debe ser 'linear' o 'nonlinear'")
+
     return x, y
 
 
