@@ -3,7 +3,7 @@
 import numpy as np
 from scipy.stats import gaussian_kde
 
-def estimate_mi_kde(x, y, bandwidth=None, n_samples=10000):
+def estimate_mi(x, y, bandwidth=None, n_samples=10000):
     """
     Estimador de información mutua usando Kernel Density Estimation (KDE).
     
