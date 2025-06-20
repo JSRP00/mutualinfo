@@ -3,6 +3,7 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from scipy.special import digamma
+from ..utils import check_input_shapes
 
 def estimate_mi(x, y, k=3):
     """
@@ -19,10 +20,9 @@ def estimate_mi(x, y, k=3):
     --------
     float : estimación de la información mutua I(X;Y)
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-
-    assert len(x) == len(y), "x e y deben tener el mismo número de muestras"
+    # Aseguramos que las entradas tengan forma (n_samples, n_features)
+    # y el mismo número de muestras
+    x, y = check_input_shapes(x, y)
 
     n = len(x)
     data = np.hstack((x, y))
@@ -35,8 +35,14 @@ def estimate_mi(x, y, k=3):
     # Número de vecinos en cada espacio marginal
     nx = NearestNeighbors(metric='chebyshev').fit(x)
     ny = NearestNeighbors(metric='chebyshev').fit(y)
-    nx_count = np.array([len(nx.radius_neighbors([x[i]], radius=eps[i], return_distance=False)[0]) - 1 for i in range(n)])
-    ny_count = np.array([len(ny.radius_neighbors([y[i]], radius=eps[i], return_distance=False)[0]) - 1 for i in range(n)])
+    nx_count = np.array([
+        len(nx.radius_neighbors(x[i].reshape(1, -1), radius=eps[i], return_distance=False)[0]) - 1
+        for i in range(n)
+    ])
+    ny_count = np.array([
+        len(ny.radius_neighbors(y[i].reshape(1, -1), radius=eps[i], return_distance=False)[0]) - 1
+        for i in range(n)
+    ])
 
     # Fórmula del estimador de Kraskov
     mi = digamma(k) + digamma(n) - np.mean(digamma(nx_count + 1) + digamma(ny_count + 1))
