@@ -1,4 +1,4 @@
-# mutualinfo/uncertainty/conformal.py
+# mutualinfo/uncertainty/conformal_heur.py
 
 import numpy as np
 
