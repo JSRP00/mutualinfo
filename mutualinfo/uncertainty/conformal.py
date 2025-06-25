@@ -1,5 +1,3 @@
-# mutualinfo/uncertainty/conformal.py
-
 from mapie.regression import SplitConformalRegressor
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -43,12 +41,12 @@ def split_conformal_regression(X, y, model, alpha=0.1, test_size=0.2, cal_size=0
     # Entrenar modelo base
     model.fit(X_train, y_train)
 
-    # Aplicar Split Conformal Regressor (prefit=True porque el modelo ya está entrenado)
-    scr = SplitConformalRegressor(estimator=model, alpha=alpha, cv="prefit")
+    # Inicializar SCR sin alpha
+    scr = SplitConformalRegressor(estimator=model, cv="prefit")
     scr.fit(X_cal, y_cal)
 
-    # Predicción
-    y_pred, y_interval = scr.predict(X_test, return_pred_int=True)
+    # Predicción con alpha especificado en predict()
+    y_pred, y_interval = scr.predict(X_test, return_pred_int=True, alpha=alpha)
 
     # Calcular coverage
     lower, upper = y_interval[:, 0], y_interval[:, 1]
