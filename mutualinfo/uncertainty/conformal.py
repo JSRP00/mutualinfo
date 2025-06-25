@@ -1,39 +1,57 @@
 # mutualinfo/uncertainty/conformal.py
 
-import numpy as np
+from mapie.regression import SplitConformalRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+import numpy as np
 
-# MAPIE para regresión
-from mapie.regression import MapieRegressor
+def split_conformal_regression(X, y, model, alpha=0.1, test_size=0.2, cal_size=0.2, random_state=42):
+    """
+    Aplica Split Conformal Prediction para regresión con intervalos de predicción.
 
-# CREPES para clasificación
-from crepes import ConformalClassifier
+    Parámetros
+    ----------
+    X : array-like
+        Variables predictoras.
+    y : array-like
+        Variable objetivo.
+    model : sklearn regressor
+        Modelo base de regresión.
+    alpha : float
+        Nivel de error (1 - nivel de confianza).
+    test_size : float
+        Proporción del conjunto de test.
+    cal_size : float
+        Proporción del conjunto de calibración.
+    random_state : int
+        Semilla para reproducibilidad.
 
+    Retorna
+    -------
+    y_pred : array
+        Predicciones puntuales.
+    y_interval : array
+        Intervalos de predicción (inferior y superior).
+    coverage : float
+        Proporción de valores reales de test dentro del intervalo.
+    """
 
-def split_data(x, y, train_size=0.6, cal_size=0.2, test_size=0.2, seed=42):
-    x_train, x_temp, y_train, y_temp = train_test_split(x, y, train_size=train_size, random_state=seed)
-    cal_ratio = cal_size / (cal_size + test_size)
-    x_cal, x_test, y_cal, y_test = train_test_split(x_temp, y_temp, train_size=cal_ratio, random_state=seed)
-    return x_train, y_train, x_cal, y_cal, x_test, y_test
+    # División train/cal/test
+    X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+    cal_fraction = cal_size / (1 - test_size)
+    X_train, X_cal, y_train, y_cal = train_test_split(X_temp, y_temp, test_size=cal_fraction, random_state=random_state)
 
+    # Entrenar modelo base
+    model.fit(X_train, y_train)
 
-def apply_conformal_regression(x_train, y_train, x_cal, y_cal, x_test, y_test, alpha=0.1):
-    base_model = RandomForestRegressor(n_estimators=100, random_state=42)
-    mapie = MapieRegressor(estimator=base_model, method="naive", cv="prefit", agg_function="mean")
+    # Aplicar Split Conformal Regressor (prefit=True porque el modelo ya está entrenado)
+    scr = SplitConformalRegressor(estimator=model, alpha=alpha, cv="prefit")
+    scr.fit(X_cal, y_cal)
 
-    base_model.fit(x_train, y_train)
-    mapie.fit(x_cal, y_cal)
-    y_pred, y_pis = mapie.predict(x_test, alpha=alpha)
-    return y_pred, y_pis
+    # Predicción
+    y_pred, y_interval = scr.predict(X_test, return_pred_int=True)
 
+    # Calcular coverage
+    lower, upper = y_interval[:, 0], y_interval[:, 1]
+    coverage = np.mean((y_test >= lower) & (y_test <= upper))
 
-def apply_conformal_classification(x_train, y_train, x_cal, y_cal, x_test, y_test, alpha=0.1):
-    base_model = RandomForestClassifier(n_estimators=100, random_state=42)
-    conformal = ConformalClassifier(model=base_model)
-
-    conformal.fit(x_train, y_train, x_cal, y_cal)
-    prediction_sets = conformal.predict(x_test, alpha=alpha)
-
-    coverage = np.mean([y_test[i] in prediction_sets[i] for i in range(len(y_test))])
-    return prediction_sets, coverage
+    return y_pred, y_interval, coverage
