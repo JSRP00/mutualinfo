@@ -1,4 +1,5 @@
-%%writefile /content/mutualinfo/mutualinfo/uncertainty/conformal.py
+# /mutualinfo/mutualinfo/uncertainty/conformal.py
+
 from mapie.regression import SplitConformalRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
