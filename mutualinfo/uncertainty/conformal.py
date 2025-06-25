@@ -71,3 +71,23 @@ def split_conformal_prediction(
         y_pred, y_set = scc.predict_set(X_test)
         coverage = classification_coverage_score(y_test, y_set)[0]
         return y_pred, y_set, coverage
+
+def encode_prediction_sets(y_pred_set, n_classes):
+    """
+    Codifica conjuntos de predicción multiclase como un entero único por fila
+    mediante codificación binaria.
+
+    Parámetros:
+    - y_pred_set: array (n_samples, k) con etiquetas predichas por fila
+    - n_classes: número total de clases
+
+    Devuelve:
+    - encoded: array (n_samples,) de valores enteros únicos por fila
+    """
+    binary_matrix = np.zeros((y_pred_set.shape[0], n_classes), dtype=int)
+    for i, pred_set in enumerate(y_pred_set):
+        for label in pred_set:
+            if label < n_classes:
+                binary_matrix[i, label] = 1
+    powers_of_two = 1 << np.arange(n_classes)
+    return binary_matrix.dot(powers_of_two)
