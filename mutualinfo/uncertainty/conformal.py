@@ -26,7 +26,7 @@ def split_conformal_regression(X, y, alpha=0.1, test_size=0.2, cal_size=0.2, ran
     scr.fit(X_combined, y_combined)
 
     # Predicción con intervalos
-    y_pred, y_interval = scr.predict(X_test, return_prediction_interval=True, alpha=alpha)
+    y_pred, y_interval = scr.predict(X_test, return_pred_int=True, alpha=alpha)
 
     # Coverage
     lower, upper = y_interval[:, 0], y_interval[:, 1]
