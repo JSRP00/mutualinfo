@@ -9,6 +9,7 @@ from .estimators import (
 from .uncertainty import (
     bootstrap_ci,
     split_conformal_prediction
+    encode_prediction_sets
 )
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "estimate_mi_histogram",
     "bootstrap_ci",
     "split_conformal_prediction"
+    "encode_prediction_sets"
 ]
