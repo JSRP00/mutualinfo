@@ -10,6 +10,7 @@ from .uncertainty import (
     bootstrap_ci,
     split_conformal_prediction,
     encode_prediction_sets
+    predict_confidence_regions
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "bootstrap_ci",
     "split_conformal_prediction",
     "encode_prediction_sets"
+    "predict_confidence_regions"
 ]
