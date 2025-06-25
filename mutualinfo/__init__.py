@@ -8,7 +8,7 @@ from .estimators import (
 
 from .uncertainty import (
     bootstrap_ci,
-    conformal_ci
+    split_conformal_regression
 )
 
 __all__ = [
