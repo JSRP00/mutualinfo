@@ -1,54 +1,73 @@
-from mapie import Mapie
-from sklearn.model_selection import train_test_split
+# mutualinfo/uncertainty/conformal.py
+
+from sklearn.base import is_regressor, is_classifier
+from mapie.utils import train_conformalize_test_split
+from mapie.regression import SplitConformalRegressor
+from mapie.classification import SplitConformalClassifier
+from mapie.metrics.regression import regression_coverage_score
+from mapie.metrics.classification import classification_coverage_score
 import numpy as np
 
-def split_conformal_regression(X, y, alpha=0.1, test_size=0.2, cal_size=0.2, random_state=42):
+def split_conformal_prediction(
+    X,
+    y,
+    model,
+    alpha=0.1,
+    test_size=0.2,
+    cal_size=0.2,
+    random_state=42
+):
     """
-    Aplica Split Conformal Prediction para regresión con intervalos de predicción.
+    Aplica Split Conformal Prediction para regresión o clasificación.
 
-    Parámetros
-    ----------
-    X : array-like
-        Variables predictoras.
-    y : array-like
-        Variable objetivo.
-    alpha : float
-        Nivel de error (1 - nivel de confianza).
-    test_size : float
-        Proporción del conjunto de test.
-    cal_size : float
-        Proporción del conjunto de calibración.
-    random_state : int
-        Semilla para reproducibilidad.
+    Parámetros:
+    - X, y: Conjunto de datos.
+    - model: Estimador sklearn (regresor o clasificador).
+    - alpha: 1 - nivel de confianza.
+    - test_size: Tamaño del conjunto de test.
+    - cal_size: Tamaño del conjunto de calibración.
+    - random_state: Semilla aleatoria.
 
-    Retorna
-    -------
-    y_pred : array
-        Predicciones puntuales sobre el test.
-    y_interval : array
-        Intervalos de predicción (inferior y superior) sobre el test.
-    coverage : float
-        Proporción de valores reales de test dentro del intervalo.
+    Devuelve:
+    - y_pred: Predicción puntual.
+    - y_interval/set: Intervalos de predicción (regresión) o conjunto de clases (clasificación).
+    - coverage: Cobertura empírica del conjunto de test.
     """
+    # Verificación temprana del tipo de modelo
+    if not (is_regressor(model) or is_classifier(model)):
+        raise ValueError("El modelo debe ser un regresor o clasificador válido de scikit-learn.")
 
-    # 1. División en train/cal/test
-    X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-    cal_fraction = cal_size / (1 - test_size)
-    X_train, X_cal, y_train, y_cal = train_test_split(X_temp, y_temp, test_size=cal_fraction, random_state=random_state)
+    # División de datos
+    X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
+        X, y,
+        train_size=1 - cal_size - test_size,
+        conformalize_size=cal_size,
+        test_size=test_size,
+        random_state=random_state
+    )
 
-    # 2. Concatenar train + calibration para Mapie (Mapie internamente hace el split)
-    X_train_total = np.concatenate([X_train, X_cal])
-    y_train_total = np.concatenate([y_train, y_cal])
+    model.fit(X_train, y_train)
 
-    # 3. Crear y ajustar MapieRegressor
-    mapie = MapieRegressor(method="quantile", alpha=alpha, random_state=random_state)
-    mapie.fit(X_train_total, y_train_total)
+    confidence_level = 1 - alpha
 
-    # 4. Predicción con intervalos sobre el test
-    y_pred, y_interval = mapie.predict(X_test, alpha=alpha)
+    if is_regressor(model):
+        scr = SplitConformalRegressor(
+            estimator=model,
+            confidence_level=confidence_level,
+            prefit=True
+        )
+        scr.conformalize(X_cal, y_cal)
+        y_pred, y_interval = scr.predict_interval(X_test)
+        coverage = regression_coverage_score(y_test, y_interval)[0]
+        return y_pred, y_interval, coverage
 
-    # 5. Calcular coverage
-    lower, upper = y_interval[:, 0], y_interval[:, 1]
-    coverage = np.mean((y_test >= lower) & (y_test <= upper))
-
-    return y_pred, y_interval, coverage
+    elif is_classifier(model):
+        scc = SplitConformalClassifier(
+            estimator=model,
+            confidence_level=confidence_level,
+            prefit=True
+        )
+        scc.conformalize(X_cal, y_cal)
+        y_pred, y_set = scc.predict_set(X_test)
+        coverage = classification_coverage_score(y_test, y_set)[0]
+        return y_pred, y_set, coverage
