@@ -75,10 +75,11 @@ def split_conformal_prediction(
 def encode_prediction_sets(y_pred_set, n_classes):
     """
     Codifica máscaras booleanas (n_samples, n_classes) como enteros únicos.
-    
-    Cada fila representa una combinación de clases predichas (como conjunto).
-    La codificación binaria se convierte en un número entero único por fila.
+    Admite forma (n_samples, n_classes) o (n_samples, n_classes, 1)
     """
+    if y_pred_set.ndim == 3 and y_pred_set.shape[2] == 1:
+        y_pred_set = y_pred_set[:, :, 0]
+
     if y_pred_set.dtype != bool:
         raise ValueError("El conjunto de predicción debe ser una matriz booleana.")
 
