@@ -1,4 +1,4 @@
-# mutualinfo/__init__.py
+# mutualinfo/__init__.py 
 
 from .estimators import (
     estimate_mi_kraskov,
@@ -8,7 +8,7 @@ from .estimators import (
 
 from .uncertainty import (
     bootstrap_ci,
-    split_conformal_regression
+    split_conformal_prediction
 )
 
 __all__ = [
@@ -16,5 +16,5 @@ __all__ = [
     "estimate_mi_kde",
     "estimate_mi_histogram",
     "bootstrap_ci",
-    "split_conformal_regression"
+    "split_conformal_prediction"
 ]
