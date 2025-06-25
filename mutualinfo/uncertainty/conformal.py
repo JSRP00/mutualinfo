@@ -74,20 +74,13 @@ def split_conformal_prediction(
 
 def encode_prediction_sets(y_pred_set, n_classes):
     """
-    Codifica conjuntos de predicción multiclase como un entero único por fila
-    mediante codificación binaria.
-
-    Parámetros:
-    - y_pred_set: array (n_samples, k) con etiquetas predichas por fila
-    - n_classes: número total de clases
-
-    Devuelve:
-    - encoded: array (n_samples,) de valores enteros únicos por fila
+    Codifica máscaras booleanas (n_samples, n_classes) como enteros únicos.
+    
+    Cada fila representa una combinación de clases predichas (como conjunto).
+    La codificación binaria se convierte en un número entero único por fila.
     """
-    binary_matrix = np.zeros((y_pred_set.shape[0], n_classes), dtype=int)
-    for i, pred_set in enumerate(y_pred_set):
-        for label in pred_set:
-            if label < n_classes:
-                binary_matrix[i, label] = 1
+    if y_pred_set.dtype != bool:
+        raise ValueError("El conjunto de predicción debe ser una matriz booleana.")
+
     powers_of_two = 1 << np.arange(n_classes)
-    return binary_matrix.dot(powers_of_two)
+    return y_pred_set.dot(powers_of_two)
