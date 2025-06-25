@@ -33,11 +33,9 @@ def split_conformal_prediction(
     - y_interval/set: Intervalos de predicción (regresión) o conjunto de clases (clasificación).
     - coverage: Cobertura empírica del conjunto de test.
     """
-    # Verificación temprana del tipo de modelo
     if not (is_regressor(model) or is_classifier(model)):
         raise ValueError("El modelo debe ser un regresor o clasificador válido de scikit-learn.")
 
-    # División de datos
     X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
         X, y,
         train_size=1 - cal_size - test_size,
@@ -74,14 +72,43 @@ def split_conformal_prediction(
 
 def encode_prediction_sets(y_pred_set, n_classes):
     """
-    Codifica máscaras booleanas (n_samples, n_classes) como enteros únicos.
-    Admite forma (n_samples, n_classes) o (n_samples, n_classes, 1)
+    Codifica conjuntos de predicción multiclase como un entero único por fila
+    mediante codificación binaria.
+
+    Parámetros:
+    - y_pred_set: array (n_samples, k) con etiquetas predichas por fila
+    - n_classes: número total de clases
+
+    Devuelve:
+    - encoded: array (n_samples,) de valores enteros únicos por fila
     """
-    if y_pred_set.ndim == 3 and y_pred_set.shape[2] == 1:
-        y_pred_set = y_pred_set[:, :, 0]
-
-    if y_pred_set.dtype != bool:
-        raise ValueError("El conjunto de predicción debe ser una matriz booleana.")
-
+    binary_matrix = np.zeros((y_pred_set.shape[0], n_classes), dtype=int)
+    for i, pred_set in enumerate(y_pred_set):
+        for label in pred_set:
+            if label < n_classes:
+                binary_matrix[i, label] = 1
     powers_of_two = 1 << np.arange(n_classes)
-    return y_pred_set.dot(powers_of_two)
+    return binary_matrix.dot(powers_of_two)
+
+def predict_confidence_regions(model, X, y, X_grid, alpha=0.1, random_state=42):
+    """
+    Aplica Split Conformal Prediction sobre una malla para clasificación.
+
+    Parámetros:
+    - model: Clasificador sklearn
+    - X, y: Datos originales
+    - X_grid: Datos sobre los que predecir las regiones (malla)
+    - alpha: Nivel de error (1 - nivel de confianza)
+    - random_state: Semilla para reproducibilidad
+
+    Devuelve:
+    - y_pred_set_mesh: Conjuntos predichos para la malla
+    """
+    mapie = SplitConformalClassifier(estimator=model, confidence_level=1 - alpha, prefit=False)
+    X_train, X_cal, _, y_train, y_cal, _ = train_conformalize_test_split(
+        X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=random_state
+    )
+    mapie.fit(X_train, y_train)
+    mapie.conformalize(X_cal, y_cal)
+    _, y_pred_set_mesh = mapie.predict_set(X_grid)
+    return y_pred_set_mesh[:, :, 0]  
