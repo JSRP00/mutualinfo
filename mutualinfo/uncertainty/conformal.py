@@ -1,4 +1,4 @@
-from mapie.regression import MapieRegressor
+from mapie import Mapie
 from sklearn.model_selection import train_test_split
 import numpy as np
 
