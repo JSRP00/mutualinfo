@@ -51,7 +51,7 @@ scr = SplitConformalRegressor(estimator=model, prefit=False)
 scr.fit(X_combined, y_combined)
 
 # Predecir en test
-y_pred, y_interval = scr.predict(X_test, return_pred_int=True, alpha=alpha)
+y_pred, y_interval = scr.predict(X_test, return_prediction_interval=True, alpha=alpha)
 
 # Calcular coverage
 lower, upper = y_interval[:, 0], y_interval[:, 1]
