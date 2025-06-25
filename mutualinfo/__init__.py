@@ -16,5 +16,5 @@ __all__ = [
     "estimate_mi_kde",
     "estimate_mi_histogram",
     "bootstrap_ci",
-    "conformal_ci"
+    "split_conformal_regression"
 ]
