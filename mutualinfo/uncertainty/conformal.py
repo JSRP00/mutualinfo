@@ -38,14 +38,13 @@ def split_conformal_regression(X, y, model, alpha=0.1, test_size=0.2, cal_size=0
     cal_fraction = cal_size / (1 - test_size)
     X_train, X_cal, y_train, y_cal = train_test_split(X_temp, y_temp, test_size=cal_fraction, random_state=random_state)
 
-    # Entrenar modelo base
-    model.fit(X_train, y_train)
+    # Inicializar SCR con modelo no entrenado
+    scr = SplitConformalRegressor(estimator=model)
 
-    # Inicializar SCR sin alpha
-    scr = SplitConformalRegressor(estimator=model, cv="prefit")
-    scr.fit(X_cal, y_cal)
+    # Entrenar con X_train (antes X_cal), pero incluye calibración internamente
+    scr.fit(X_train, y_train)
 
-    # Predicción con alpha especificado en predict()
+    # Predicción sobre test
     y_pred, y_interval = scr.predict(X_test, return_pred_int=True, alpha=alpha)
 
     # Calcular coverage
