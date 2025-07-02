@@ -117,3 +117,31 @@ def plot_classification_regions(X, y, classifier, resolution=0.1):
     plt.ylabel("x2")
     plt.title("Regiones de confianza (clasificación)")
     plt.show()
+
+# -------------------------
+
+from sklearn.model_selection import train_test_split
+
+def train_conformalize_test_split(X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=None):
+    """
+    Divide X e y en tres subconjuntos disjuntos:
+    - Train
+    - Calibration (conformalize)
+    - Test
+
+    Los tamaños deben sumar 1.0
+    """
+    assert abs(train_size + conformalize_size + test_size - 1.0) < 1e-6, "Las proporciones deben sumar 1."
+
+    # División train vs temp
+    X_train, X_temp, y_train, y_temp = train_test_split(
+        X, y, test_size=(1.0 - train_size), random_state=random_state
+    )
+
+    # División calibration vs test
+    cal_ratio = conformalize_size / (conformalize_size + test_size)
+    X_cal, X_test, y_cal, y_test = train_test_split(
+        X_temp, y_temp, test_size=(1.0 - cal_ratio), random_state=random_state
+    )
+
+    return X_train, X_cal, X_test, y_train, y_cal, y_test
