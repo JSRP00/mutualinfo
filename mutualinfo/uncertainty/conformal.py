@@ -1,7 +1,7 @@
 # mutualinfo/uncertainty/conformal.py
 
 from sklearn.base import is_regressor, is_classifier
-from mapie.utils import train_conformalize_test_split
+from mutualinfo.utils import train_conformalize_test_split
 from mapie.regression import SplitConformalRegressor
 from mapie.classification import SplitConformalClassifier
 from mapie.metrics.regression import regression_coverage_score
