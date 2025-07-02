@@ -7,7 +7,7 @@ name = "mutualinfo"
 version = "0.1.0"
 description = "Librería para estimar la información mutua y cuantificar su incertidumbre"
 authors = [
-    { name = "Tu Nombre", email = "tu.email@example.com" }
+    { name = "Jorge Santiago", email = "jrodriguezp.5@alumni.unav.es" }
 ]
 license = { text = "MIT" }
 readme = "README.md"
