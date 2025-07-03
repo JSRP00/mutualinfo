@@ -145,3 +145,38 @@ def train_conformalize_test_split(X, y, train_size=0.6, conformalize_size=0.2, t
     )
 
     return X_train, X_cal, X_test, y_train, y_cal, y_test
+
+
+
+from sklearn.datasets import make_classification
+
+def generate_classification_data(n=1000, n_features=2, n_classes=3, class_sep=1.0, seed=None):
+    """
+    Genera datos sintéticos para clasificación multiclase.
+
+    Parámetros:
+    - n: número de muestras
+    - n_features: número de características (idealmente 2 para visualización)
+    - n_classes: número de clases
+    - class_sep: separación entre clases
+    - seed: semilla aleatoria
+
+    Devuelve:
+    - X: array de características
+    - y: etiquetas
+    """
+    if seed is not None:
+        set_random_seed(seed)
+
+    X, y = make_classification(
+        n_samples=n,
+        n_features=n_features,
+        n_informative=2,
+        n_redundant=0,
+        n_clusters_per_class=1,
+        n_classes=n_classes,
+        class_sep=class_sep,
+        random_state=seed
+    )
+    return X, y
+
