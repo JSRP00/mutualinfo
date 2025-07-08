@@ -1,6 +1,8 @@
 # mutualinfo/uncertainty/conformal.py
 
 from sklearn.base import is_regressor, is_classifier
+from scipy.stats import entropy
+from collections import Counter
 from mutualinfo.utils import train_conformalize_test_split
 from mapie.regression import SplitConformalRegressor
 from mapie.classification import SplitConformalClassifier
@@ -111,4 +113,73 @@ def predict_confidence_regions(model, X, y, X_grid, alpha=0.1, random_state=42):
     mapie.fit(X_train, y_train)
     mapie.conformalize(X_cal, y_cal)
     _, y_pred_set_mesh = mapie.predict_set(X_grid)
-    return y_pred_set_mesh[:, :, 0]  
+    return y_pred_set_mesh[:, :, 0] 
+
+def estimate_mi_from_conformal_prediction_sets(
+    X,
+    y,
+    model,
+    alpha=0.1,
+    test_size=0.2,
+    cal_size=0.2,
+    random_state=42
+):
+    """
+    Estima la información mutua I(Y;X) usando Split Conformal Prediction sobre clasificación.
+
+    Parámetros:
+    - X, y: Datos completos.
+    - model: Clasificador sklearn.
+    - alpha: Nivel de error (1 - nivel de confianza).
+    - test_size: Tamaño del conjunto de test.
+    - cal_size: Tamaño del conjunto de calibración.
+    - random_state: Semilla.
+
+    Devuelve:
+    - mi: Información mutua estimada.
+    - h_y: Entropía marginal H(Y).
+    - h_y_given_x: Entropía condicional H(Y|X) basada en prediction sets.
+    """
+
+    if not is_classifier(model):
+        raise ValueError("Este método solo es compatible con clasificadores.")
+
+    # Split del dataset
+    X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
+        X, y,
+        train_size=1 - cal_size - test_size,
+        conformalize_size=cal_size,
+        test_size=test_size,
+        random_state=random_state
+    )
+
+    model.fit(X_train, y_train)
+
+    # Obtener prediction sets con Mapie
+    scc = SplitConformalClassifier(
+        estimator=model,
+        confidence_level=1 - alpha,
+        prefit=True
+    )
+    scc.conformalize(X_cal, y_cal)
+    _, y_pred_set = scc.predict_set(X_test)
+
+    n_classes = len(np.unique(y))
+
+    # Calcular H(Y)
+    counts = np.array(list(Counter(y_test).values()))
+    probs_y = counts / counts.sum()
+    h_y = entropy(probs_y, base=2)
+
+    # Calcular H(Y|X) a partir de prediction sets
+    entropies = []
+    for pred in y_pred_set:
+        probs = np.zeros(n_classes)
+        for c in pred:
+            probs[c] = 1 / len(pred)
+        entropies.append(entropy(probs, base=2))
+    h_y_given_x = np.mean(entropies)
+
+    # MI estimada
+    mi = h_y - h_y_given_x
+    return mi, h_y, h_y_given_x
