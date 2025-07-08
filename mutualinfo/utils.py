@@ -27,23 +27,18 @@ def set_random_seed(seed):
     np.random.seed(seed)
 
 
-def generate_dependent_data(n=1000, relation="nonlinear", noise=0.1, seed=None):
-    """
-    Genera datos dependientes entre x e y.
-    """
-    if seed is not None:
-        set_random_seed(seed)
-
-    x = np.random.uniform(0, 1, n)
+def generate_dependent_data(n_samples=1000, relation="nonlinear", noise=0.1, random_state=None):
+    rng = np.random.default_rng(random_state)
+    x = rng.uniform(0, 1, n_samples)
 
     if relation == "linear":
-        y = 2 * x + noise * np.random.randn(n)
+        y = 2 * x + noise * rng.standard_normal(n_samples)
     elif relation == "nonlinear":
-        y = np.sin(2 * np.pi * x) + noise * np.random.randn(n)
+        y = np.sin(2 * np.pi * x) + noise * rng.standard_normal(n_samples)
     else:
-        raise ValueError("relation debe ser 'linear' o 'nonlinear'")
+        raise ValueError("relation must be 'linear' or 'nonlinear'")
 
-    return x, y
+    return x.reshape(-1, 1), y
 
 
 def generate_independent_data(n=1000, seed=None):
