@@ -2,11 +2,12 @@
 
 from sklearn.base import is_regressor, is_classifier
 from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.neighbors import KNeighborsClassifier
 from scipy.stats import entropy
 from collections import Counter
 from mutualinfo.utils import train_conformalize_test_split
 from mapie.regression import SplitConformalRegressor
-from mapie.classification import SplitConformalClassifier
+from mapie.classification import MapieClassifier, SplitConformalClassifier
 from mapie.metrics.regression import regression_coverage_score
 from mapie.metrics.classification import classification_coverage_score
 import numpy as np
@@ -328,4 +329,54 @@ def estimate_mi_kraskov_conformal(
         coverage = classification_coverage_score(y_test, y_pred_set)[0]
 
     return mi, h_y, h_y_given_x, coverage
+
+def estimate_mi_cp_radius(
+    X,
+    y,
+    alpha=0.1,
+    test_size=0.2,
+    cal_size=0.2,
+    k=5,
+    random_state=42
+):
+    """
+    Estima la información mutua usando KNeighbors + Conformal Prediction en lugar del radio de Kraskov.
+    """
+    X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
+        X, y, train_size=1 - cal_size - test_size,
+        conformalize_size=cal_size,
+        test_size=test_size,
+        random_state=random_state
+    )
+
+    base_knn = KNeighborsClassifier(n_neighbors=k)
+    mapie = MapieClassifier(estimator=base_knn, method="score", cv="prefit")
+
+    base_knn.fit(X_train, y_train)
+    mapie.fit(X_train, y_train)
+    mapie.conformalize(X_cal, y_cal)
+
+    _, y_pred_set = mapie.predict(X_test, alpha=alpha)
+
+    n_classes = len(np.unique(y))
+    entropies = []
+    for pred in y_pred_set:
+        pred = list(np.where(pred)[0])  # prediction set en formato lista de índices
+        if len(pred) == 0:
+            continue
+        probs = np.zeros(n_classes)
+        for c in pred:
+            probs[c] = 1 / len(pred)
+        entropies.append(entropy(probs, base=2))
+
+    h_y_given_x = np.mean(entropies)
+    counts = np.array(list(Counter(y_test).values()))
+    probs_y = counts / counts.sum()
+    h_y = entropy(probs_y, base=2)
+
+    mi = h_y - h_y_given_x
+
+    coverage = classification_coverage_score(y_test, y_pred_set)[0]
+    return mi, h_y, h_y_given_x, coverage
+
 
