@@ -198,3 +198,41 @@ def estimate_mi_from_conformal_prediction_sets(
     # MI estimada
     mi = h_y - h_y_given_x
     return mi, h_y, h_y_given_x
+
+def estimate_mi_with_uncertainty(
+    X,
+    y,
+    model,
+    alphas=(0.05, 0.1, 0.2),
+    test_size=0.2,
+    cal_size=0.2,
+    random_state=42
+):
+    """
+    Estima la información mutua con intervalos de incertidumbre usando Conformal Prediction.
+
+    Devuelve:
+    - mi_central: estimación central con alpha medio
+    - mi_low: límite inferior con alpha mayor
+    - mi_high: límite superior con alpha menor
+    """
+    results = {}
+    for alpha in alphas:
+        mi, _, _ = estimate_mi_from_conformal_prediction_sets(
+            X, y, model,
+            alpha=alpha,
+            test_size=test_size,
+            cal_size=cal_size,
+            random_state=random_state
+        )
+        results[alpha] = mi
+
+    alpha_mid = sorted(alphas)[1]
+    alpha_low = max(alphas)
+    alpha_high = min(alphas)
+
+    mi_low = results[alpha_low]
+    mi_central = results[alpha_mid]
+    mi_high = results[alpha_high]
+
+    return mi_central, mi_low, mi_high
