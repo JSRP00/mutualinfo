@@ -7,7 +7,7 @@ from scipy.stats import entropy
 from collections import Counter
 from mutualinfo.utils import train_conformalize_test_split
 from mapie.regression import SplitConformalRegressor
-from mapie.classification import MapieClassifier, SplitConformalClassifier
+from mapie.classification import SplitConformalClassifier
 from mapie.metrics.regression import regression_coverage_score
 from mapie.metrics.classification import classification_coverage_score
 import numpy as np
