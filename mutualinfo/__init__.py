@@ -11,6 +11,7 @@ from .uncertainty import (
     split_conformal_prediction,
     encode_prediction_sets,
     predict_confidence_regions
+    estimate_mi_from_conformal_prediction_sets
 )
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     "bootstrap_ci",
     "split_conformal_prediction",
     "encode_prediction_sets",
-    "predict_confidence_regions"
+    "predict_confidence_regions",
+    "estimate_mi_from_conformal_prediction_sets"
 ]
