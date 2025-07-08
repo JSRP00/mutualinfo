@@ -1,6 +1,7 @@
 # mutualinfo/uncertainty/conformal.py
 
 from sklearn.base import is_regressor, is_classifier
+from sklearn.preprocessing import KBinsDiscretizer
 from scipy.stats import entropy
 from collections import Counter
 from mutualinfo.utils import train_conformalize_test_split
