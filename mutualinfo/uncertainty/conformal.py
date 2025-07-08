@@ -172,26 +172,27 @@ def estimate_mi_from_conformal_prediction_sets(
     h_y = entropy(probs_y, base=2)
 
     # Calcular H(Y|X) a partir de prediction sets (con soporte para arrays y máscaras booleanas)
-entropies = []
-for pred in y_pred_set:
-    # Asegurar que el prediction set sea una lista de índices de clase
-    if isinstance(pred, np.ndarray):
-        if pred.dtype == bool:
-            pred = np.where(pred)[0].tolist()
-        elif pred.ndim > 1:
-            pred = np.array(pred).flatten().tolist()
-        else:
-            pred = pred.tolist()
-    elif not isinstance(pred, list):
-        pred = [int(pred)]
+    entropies = []
+    for pred in y_pred_set:
+        # Asegurar que el prediction set sea una lista de índices de clase
+        if isinstance(pred, np.ndarray):
+            if pred.dtype == bool:
+                pred = np.where(pred)[0].tolist()
+            elif pred.ndim > 1:
+                pred = np.array(pred).flatten().tolist()
+            else:
+                pred = pred.tolist()
+        elif not isinstance(pred, list):
+            pred = [int(pred)]
 
-    if len(pred) == 0:
-        continue  # Evita división por cero si el set está vacío
+        if len(pred) == 0:
+            continue  # Evita división por cero si el set está vacío
 
-    probs = np.zeros(n_classes)
-    for c in pred:
-        probs[c] = 1 / len(pred)
-    entropies.append(entropy(probs, base=2))
+        probs = np.zeros(n_classes)
+        for c in pred:
+            probs[c] = 1 / len(pred)
+        entropies.append(entropy(probs, base=2))
+
     h_y_given_x = np.mean(entropies)
 
     # MI estimada
