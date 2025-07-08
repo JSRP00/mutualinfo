@@ -12,7 +12,8 @@ from .uncertainty import (
     encode_prediction_sets,
     predict_confidence_regions,
     estimate_mi_from_conformal_prediction_sets,
-    estimate_mi_with_uncertainty
+    estimate_mi_with_uncertainty,
+    estimate_mi_kraskov_conformal
 )
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     "encode_prediction_sets",
     "predict_confidence_regions",
     "estimate_mi_from_conformal_prediction_sets",
-    "estimate_mi_with_uncertainty"
+    "estimate_mi_with_uncertainty",
+    "estimate_mi_kraskov_conformal"
 ]
