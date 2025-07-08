@@ -236,3 +236,95 @@ def estimate_mi_with_uncertainty(
     mi_high = results[alpha_high]
 
     return mi_central, mi_low, mi_high
+
+def estimate_mi_kraskov_conformal(
+    X,
+    y,
+    model,
+    alpha=0.1,
+    test_size=0.2,
+    cal_size=0.2,
+    n_bins=10,
+    random_state=42
+):
+    """
+    Estima la información mutua I(X;Y) aplicando Conformal Prediction y propagando la incertidumbre.
+    Funciona para tareas de regresión y clasificación.
+
+    Devuelve:
+    - MI estimada
+    - H(Y)
+    - H(Y|X)
+    - coverage empírico
+    """
+    from sklearn.utils.multiclass import type_of_target
+
+    is_reg = is_regressor(model)
+    is_clf = is_classifier(model)
+    if not (is_reg or is_clf):
+        raise ValueError("El modelo debe ser un regresor o clasificador válido de sklearn.")
+
+    X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
+        X, y, train_size=1 - cal_size - test_size,
+        conformalize_size=cal_size,
+        test_size=test_size,
+        random_state=random_state
+    )
+
+    model.fit(X_train, y_train)
+    confidence_level = 1 - alpha
+
+    if is_reg:
+        scr = SplitConformalRegressor(estimator=model, confidence_level=confidence_level, prefit=True)
+        scr.conformalize(X_cal, y_cal)
+        y_pred, y_interval = scr.predict_interval(X_test)
+
+        interval_lengths = np.abs(y_interval[:, 1] - y_interval[:, 0])
+        eps = 1e-8
+        interval_lengths = np.clip(interval_lengths, eps, None)
+        h_y_given_x = np.mean(np.log2(interval_lengths))
+
+        discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='uniform')
+        y_binned = discretizer.fit_transform(y_test.reshape(-1, 1)).astype(int).ravel()
+        counts = np.array(list(Counter(y_binned).values()))
+        probs_y = counts / counts.sum()
+        h_y = entropy(probs_y, base=2)
+
+        mi = h_y - h_y_given_x
+        coverage = regression_coverage_score(y_test, y_interval)[0]
+
+    elif is_clf:
+        scc = SplitConformalClassifier(estimator=model, confidence_level=confidence_level, prefit=True)
+        scc.conformalize(X_cal, y_cal)
+        _, y_pred_set = scc.predict_set(X_test)
+
+        n_classes = len(np.unique(y))
+
+        entropies = []
+        for pred in y_pred_set:
+            if isinstance(pred, np.ndarray):
+                if pred.dtype == bool:
+                    pred = np.where(pred)[0].tolist()
+                elif pred.ndim > 1:
+                    pred = np.array(pred).flatten().tolist()
+                else:
+                    pred = pred.tolist()
+            elif not isinstance(pred, list):
+                pred = [int(pred)]
+            if len(pred) == 0:
+                continue
+            probs = np.zeros(n_classes)
+            for c in pred:
+                probs[c] = 1 / len(pred)
+            entropies.append(entropy(probs, base=2))
+
+        h_y_given_x = np.mean(entropies)
+        counts = np.array(list(Counter(y_test).values()))
+        probs_y = counts / counts.sum()
+        h_y = entropy(probs_y, base=2)
+
+        mi = h_y - h_y_given_x
+        coverage = classification_coverage_score(y_test, y_pred_set)[0]
+
+    return mi, h_y, h_y_given_x, coverage
+
