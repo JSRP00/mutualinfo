@@ -350,18 +350,19 @@ def estimate_mi_cp_radius(
     )
 
     base_knn = KNeighborsClassifier(n_neighbors=k)
-    mapie = MapieClassifier(estimator=base_knn, method="score", cv="prefit")
-
-    base_knn.fit(X_train, y_train)
-    mapie.fit(X_train, y_train)
-    mapie.conformalize(X_cal, y_cal)
-
-    _, y_pred_set = mapie.predict(X_test, alpha=alpha)
+    scc = SplitConformalClassifier(
+        estimator=base_knn,
+        confidence_level=1 - alpha,
+        prefit=False
+    )
+    scc.fit(X_train, y_train)
+    scc.conformalize(X_cal, y_cal)
+    _, y_pred_set = scc.predict_set(X_test)
 
     n_classes = len(np.unique(y))
     entropies = []
     for pred in y_pred_set:
-        pred = list(np.where(pred)[0])  # prediction set en formato lista de índices
+        pred = list(np.where(pred)[0]) if pred.dtype == bool else pred.tolist()
         if len(pred) == 0:
             continue
         probs = np.zeros(n_classes)
@@ -373,7 +374,6 @@ def estimate_mi_cp_radius(
     counts = np.array(list(Counter(y_test).values()))
     probs_y = counts / counts.sum()
     h_y = entropy(probs_y, base=2)
-
     mi = h_y - h_y_given_x
 
     coverage = classification_coverage_score(y_test, y_pred_set)[0]
