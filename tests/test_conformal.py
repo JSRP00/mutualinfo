@@ -1,4 +1,4 @@
-# mutualinfo/tests/test_conformal.py
+# tests/test_conformal.py
 
 import numpy as np
 from sklearn.datasets import make_classification
