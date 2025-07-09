@@ -1,3 +1,5 @@
+# mutualinfo/uncertainty/kraskov_cp.py
+
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.base import is_classifier, is_regressor
