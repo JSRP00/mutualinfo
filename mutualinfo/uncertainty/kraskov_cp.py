@@ -1,14 +1,20 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.base import is_classifier, is_regressor
+from sklearn.preprocessing import KBinsDiscretizer
 from scipy.stats import entropy
 from collections import Counter
 from mapie.classification import SplitConformalClassifier
 from mapie.regression import SplitConformalRegressor
-from mapie.metrics import regression_coverage_score
 from mutualinfo.utils import train_conformalize_test_split
 
+def regression_coverage_score_manual(y_true, intervals):
+    """
+    Calcula la cobertura empírica: proporción de veces que y_true está dentro del intervalo.
+    """
+    lower_bounds = intervals[:, 0]
+    upper_bounds = intervals[:, 1]
+    return np.mean((y_true >= lower_bounds) & (y_true <= upper_bounds))
 
 def estimate_mi_kraskov_conformal(
     X,
@@ -22,12 +28,11 @@ def estimate_mi_kraskov_conformal(
     random_state=42
 ):
     """
-    Estima la información mutua I(Y;X) utilizando Kraskov con predicción conformal
-    sobre modelos KNN, tanto en clasificación como regresión.
+    Estima la información mutua I(Y;X) utilizando Conformal Prediction con modelos KNN, tanto en clasificación como regresión.
 
     Parámetros:
     - X, y: datos de entrada (arrays).
-    - model: modelo base (KNN classifier o regressor).
+    - model: modelo base (KNNClassifier o Regressor).
     - alpha: nivel de error (1 - confianza).
     - task: "classification", "regression" o "auto".
     - n_bins: número de bins si se discretiza y (para entropía).
@@ -98,8 +103,6 @@ def estimate_mi_kraskov_conformal(
         mi = h_y - h_y_given_x
         coverage = cp.coverage_score(X_test, y_test)
 
-        return mi, h_y, h_y_given_x, coverage
-
     else:
         # Conformal Prediction para regresión
         cp = SplitConformalRegressor(estimator=model, confidence_level=confidence, prefit=True)
@@ -110,11 +113,14 @@ def estimate_mi_kraskov_conformal(
         pseudo_entropy = np.log(lengths + 1e-8)  # evitar log(0)
         h_y_given_x = np.mean(pseudo_entropy)
 
-        counts = np.array(list(Counter(y_test).values()))
+        # Entropía marginal usando distribución empírica
+        discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='quantile')
+        y_test_binned = discretizer.fit_transform(y_test.reshape(-1, 1)).ravel()
+        counts = np.array(list(Counter(y_test_binned).values()))
         probs_y = counts / counts.sum()
         h_y = entropy(probs_y, base=2)
 
         mi = h_y - h_y_given_x
-        coverage = regression_coverage_score(y_test, intervals)[0]
+        coverage = regression_coverage_score_manual(y_test, intervals)
 
         return mi, h_y, h_y_given_x, coverage
