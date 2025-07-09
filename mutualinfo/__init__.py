@@ -13,6 +13,7 @@ from .uncertainty import (
     predict_confidence_regions,
     estimate_mi_from_conformal_prediction_sets,
     estimate_mi_with_uncertainty,
+    regression_coverage_score_manual,
     estimate_mi_kraskov_conformal,
     estimate_mi_cp_radius
 )
@@ -27,6 +28,7 @@ __all__ = [
     "predict_confidence_regions",
     "estimate_mi_from_conformal_prediction_sets",
     "estimate_mi_with_uncertainty",
+    "regression_coverage_score_manual",
     "estimate_mi_kraskov_conformal",
     "estimate_mi_cp_radius"
 ]
