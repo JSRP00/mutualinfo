@@ -1,4 +1,4 @@
-# tests/test_estimators.py
+# mutualinfo/tests/test_estimators.py
 
 import numpy as np
 from mutualinfo.estimators import (
