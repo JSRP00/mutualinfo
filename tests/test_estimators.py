@@ -8,7 +8,7 @@ from mutualinfo.estimators import (
 )
 from mutualinfo.utils import generate_dependent_data, generate_independent_data
 
-# Semilla para reproducibilidad
+# Random seed for reproducibility
 SEED = 123
 N = 300
 

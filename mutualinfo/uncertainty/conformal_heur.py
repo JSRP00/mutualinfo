@@ -4,22 +4,22 @@ import numpy as np
 
 def conformal_ci(estimate_func, x, y, calibration_ratio=0.3, alpha=0.05, n_samples=100, seed=None, **kwargs):
     """
-    Intervalo de predicción conformal para la estimación de información mutua.
+    Conformal prediction interval for a mutual information estimate.
     
-    Parámetros:
-    ------------
-    estimate_func : función de estimación de MI
+    Parameters
+    ----------
+    estimate_func : MI estimation function
     x : array-like, variable X
     y : array-like, variable Y
-    calibration_ratio : float (0-1), proporción de muestras para calibración
-    alpha : nivel de significación (por defecto 0.05 → IC 95%)
-    n_samples : número de remuestreos para construir distribución
-    seed : int o None, semilla
-    **kwargs : argumentos adicionales para estimate_func
+    calibration_ratio : float (0-1), share of samples used for calibration
+    alpha : significance level (default 0.05, i.e. a 95% interval)
+    n_samples : number of resamples used to build the distribution
+    seed : int or None, random seed
+    **kwargs : extra arguments passed to estimate_func
     
-    Retorna:
-    --------
-    (float, float) → intervalo de predicción (conformal)
+    Returns
+    -------
+    (float, float) : conformal prediction interval
     """
     if seed is not None:
         np.random.seed(seed)
@@ -28,7 +28,7 @@ def conformal_ci(estimate_func, x, y, calibration_ratio=0.3, alpha=0.05, n_sampl
     y = np.array(y)
     n = len(x)
 
-    # Partición en calibración y evaluación
+    # Split into calibration and evaluation
     idx = np.random.permutation(n)
     n_cal = int(n * calibration_ratio)
     idx_cal = idx[:n_cal]
@@ -37,10 +37,10 @@ def conformal_ci(estimate_func, x, y, calibration_ratio=0.3, alpha=0.05, n_sampl
     x_cal, y_cal = x[idx_cal], y[idx_cal]
     x_eval, y_eval = x[idx_eval], y[idx_eval]
 
-    # Estimación de referencia con evaluación
+    # Reference estimate on the evaluation split
     mi_eval = estimate_func(x_eval, y_eval, **kwargs)
 
-    # Generamos n_samples estimaciones de MI con datos de calibración
+    # Draw n_samples MI estimates from the calibration data
     mi_samples = []
     for _ in range(n_samples):
         idx_boot = np.random.choice(n_cal, n_cal, replace=True)

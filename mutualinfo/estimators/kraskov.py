@@ -7,36 +7,36 @@ from mutualinfo.utils import check_input_shapes
 
 def estimate_mi(x, y, k=3):
     """
-    Estimador de información mutua entre dos variables continuas
-    utilizando el método de Kraskov et al. (2004).
+    Mutual information estimator for two continuous variables
+    using the method of Kraskov et al. (2004).
     
-    Parámetros:
-    ------------
+    Parameters
+    ----------
     x : ndarray, shape (n_samples, n_features_x)
     y : ndarray, shape (n_samples, n_features_y)
-    k : int, número de vecinos más cercanos
+    k : int, number of nearest neighbours
     
-    Retorna:
-    --------
-    float : estimación de la información mutua I(X;Y)
+    Returns
+    -------
+    float : estimate of the mutual information I(X;Y)
     """
     x, y = check_input_shapes(x, y)
 
     n = len(x)
     data = np.hstack((x, y))
 
-    # Vecinos en espacio conjunto
+    # Neighbours in the joint space
     nbrs = NearestNeighbors(n_neighbors=k + 1, metric='chebyshev').fit(data)
     distances, _ = nbrs.kneighbors(data)
-    eps = distances[:, k]  # Distancia al k-ésimo vecino (ignoramos el 0-ésimo: uno mismo)
+    eps = distances[:, k]  # Distance to the k-th neighbour (index 0 is the point itself)
 
-    # Número de vecinos en cada espacio marginal
+    # Number of neighbours in each marginal space
     nx = NearestNeighbors(metric='chebyshev').fit(x)
     ny = NearestNeighbors(metric='chebyshev').fit(y)
     nx_count = np.array([len(nx.radius_neighbors([x[i]], radius=eps[i], return_distance=False)[0]) - 1 for i in range(n)])
     ny_count = np.array([len(ny.radius_neighbors([y[i]], radius=eps[i], return_distance=False)[0]) - 1 for i in range(n)])
 
-    # Fórmula del estimador de Kraskov
+    # Kraskov estimator formula
     mi = digamma(k) + digamma(n) - np.mean(digamma(nx_count + 1) + digamma(ny_count + 1))
 
     return mi

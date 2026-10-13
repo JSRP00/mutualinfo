@@ -4,13 +4,13 @@ import numpy as np
 
 def check_input_shapes(x, y):
     """
-    Asegura que x e y tengan la misma longitud y los convierte en arrays 2D.
+    Checks that x and y have the same length and converts them to 2D arrays.
     """
     x = np.asarray(x)
     y = np.asarray(y)
 
     if len(x) != len(y):
-        raise ValueError("x e y deben tener el mismo número de muestras")
+        raise ValueError("x and y must have the same number of samples")
 
     if x.ndim == 1:
         x = x.reshape(-1, 1)
@@ -22,7 +22,7 @@ def check_input_shapes(x, y):
 
 def set_random_seed(seed):
     """
-    Fija una semilla aleatoria para reproducibilidad.
+    Sets a random seed for reproducibility.
     """
     np.random.seed(seed)
 
@@ -43,7 +43,7 @@ def generate_dependent_data(n_samples=1000, relation="nonlinear", noise=0.1, ran
 
 def generate_independent_data(n=1000, seed=None):
     """
-    Genera datos independientes x ~ U(0,1), y ~ U(0,1)
+    Generates independent data x ~ U(0,1), y ~ U(0,1).
     """
     if seed is not None:
         set_random_seed(seed)
@@ -53,38 +53,38 @@ def generate_independent_data(n=1000, seed=None):
     return x, y
 
 
-# ------------------- Funciones de visualización -------------------
+# ------------------- Plotting helpers -------------------
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
 def plot_regression_intervals(X_test, y_test, y_pred, y_interval):
     """
-    Visualiza intervalos de predicción para regresión.
+    Plots prediction intervals for regression.
     """
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.scatter(X_test, y_test, alpha=0.3, label="Datos reales")
+    plt.scatter(X_test, y_test, alpha=0.3, label="Observed data")
 
     X_test = X_test.ravel()
     order = np.argsort(X_test)
-    plt.plot(X_test[order], y_pred[order], color="C1", label="Predicción")
-    plt.plot(X_test[order], y_interval[order][:, 0, 0], color="C1", ls="--", label="Límite inferior")
-    plt.plot(X_test[order], y_interval[order][:, 1, 0], color="C1", ls="--", label="Límite superior")
+    plt.plot(X_test[order], y_pred[order], color="C1", label="Prediction")
+    plt.plot(X_test[order], y_interval[order][:, 0, 0], color="C1", ls="--", label="Lower bound")
+    plt.plot(X_test[order], y_interval[order][:, 1, 0], color="C1", ls="--", label="Upper bound")
     plt.fill_between(
         X_test[order],
         y_interval[:, 0, 0][order].ravel(),
         y_interval[:, 1, 0][order].ravel(),
         alpha=0.2
     )
-    plt.title("Intervalos de predicción estimados")
+    plt.title("Estimated prediction intervals")
     plt.legend()
     plt.show()
 
 
 def plot_classification_regions(X, y, classifier, resolution=0.1):
     """
-    Visualiza regiones de confianza para clasificación 2D.
+    Plots confidence regions for 2D classification.
     """
     x_min, x_max = np.min(X[:, 0]), np.max(X[:, 0])
     y_min, y_max = np.min(X[:, 1]), np.max(X[:, 1])
@@ -110,7 +110,7 @@ def plot_classification_regions(X, y, classifier, resolution=0.1):
     plt.scatter(X[:, 0], X[:, 1], c=y, cmap=cmap_dots)
     plt.xlabel("x1")
     plt.ylabel("x2")
-    plt.title("Regiones de confianza (clasificación)")
+    plt.title("Confidence regions (classification)")
     plt.show()
 
 # -------------------------
@@ -119,21 +119,21 @@ from sklearn.model_selection import train_test_split
 
 def train_conformalize_test_split(X, y, train_size=0.6, conformalize_size=0.2, test_size=0.2, random_state=None):
     """
-    Divide X e y en tres subconjuntos disjuntos:
+    Splits X and y into three disjoint subsets:
     - Train
     - Calibration (conformalize)
     - Test
 
-    Los tamaños deben sumar 1.0
+    The proportions must add up to 1.0.
     """
     assert abs(train_size + conformalize_size + test_size - 1.0) < 1e-6, "Las proporciones deben sumar 1."
 
-    # División train vs temp
+    # Split: train vs. remainder
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=(1.0 - train_size), random_state=random_state
     )
 
-    # División calibration vs test
+    # Split: calibration vs. test
     cal_ratio = conformalize_size / (conformalize_size + test_size)
     X_cal, X_test, y_cal, y_test = train_test_split(
         X_temp, y_temp, test_size=(1.0 - cal_ratio), random_state=random_state
@@ -147,18 +147,18 @@ from sklearn.datasets import make_classification
 
 def generate_classification_data(n=1000, n_features=2, n_classes=3, class_sep=1.0, seed=None):
     """
-    Genera datos sintéticos para clasificación multiclase.
+    Generates synthetic data for multiclass classification.
 
-    Parámetros:
-    - n: número de muestras
-    - n_features: número de características (idealmente 2 para visualización)
-    - n_classes: número de clases
-    - class_sep: separación entre clases
-    - seed: semilla aleatoria
+    Parameters:
+    - n: number of samples
+    - n_features: number of features (ideally 2 for plotting)
+    - n_classes: number of classes
+    - class_sep: class separation
+    - seed: random seed
 
-    Devuelve:
-    - X: array de características
-    - y: etiquetas
+    Returns:
+    - X: feature array
+    - y: labels
     """
     if seed is not None:
         set_random_seed(seed)

@@ -19,7 +19,7 @@ def test_mi_with_conformal_prediction_sets():
         X, y, model, alpha=0.1, test_size=0.2, cal_size=0.2
     )
 
-    # Comprobaciones básicas
+    # Basic checks
     assert 0 <= h_y_given_x <= h_y <= np.log2(3) + 0.1
-    assert 0 <= mi <= h_y + 1e-6  # Tolerancia numérica
-    print("Test passed: Información mutua estimada correctamente con CP.")
+    assert 0 <= mi <= h_y + 1e-6  # Numerical tolerance
+    print("Test passed: mutual information estimated with conformal prediction.")

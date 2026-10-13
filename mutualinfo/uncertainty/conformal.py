@@ -22,23 +22,23 @@ def split_conformal_prediction(
     random_state=42
 ):
     """
-    Aplica Split Conformal Prediction para regresión o clasificación.
+    Applies split conformal prediction for regression or classification.
 
-    Parámetros:
-    - X, y: Conjunto de datos.
-    - model: Estimador sklearn (regresor o clasificador).
-    - alpha: 1 - nivel de confianza.
-    - test_size: Tamaño del conjunto de test.
-    - cal_size: Tamaño del conjunto de calibración.
-    - random_state: Semilla aleatoria.
+    Parameters:
+    - X, y: dataset.
+    - model: scikit-learn estimator (regressor or classifier).
+    - alpha: 1 - confidence level.
+    - test_size: size of the test set.
+    - cal_size: size of the calibration set.
+    - random_state: random seed.
 
-    Devuelve:
-    - y_pred: Predicción puntual.
-    - y_interval/set: Intervalos de predicción (regresión) o conjunto de clases (clasificación).
-    - coverage: Cobertura empírica del conjunto de test.
+    Returns:
+    - y_pred: point prediction.
+    - y_interval/set: prediction intervals (regression) or class sets (classification).
+    - coverage: empirical coverage on the test set.
     """
     if not (is_regressor(model) or is_classifier(model)):
-        raise ValueError("El modelo debe ser un regresor o clasificador válido de scikit-learn.")
+        raise ValueError("The model must be a valid scikit-learn regressor or classifier.")
 
     X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
         X, y,
@@ -76,15 +76,15 @@ def split_conformal_prediction(
 
 def encode_prediction_sets(y_pred_set, n_classes):
     """
-    Codifica conjuntos de predicción multiclase como un entero único por fila
-    mediante codificación binaria.
+    Encodes multiclass prediction sets as a single integer per row
+    using binary encoding.
 
-    Parámetros:
-    - y_pred_set: array (n_samples, k) con etiquetas predichas por fila
-    - n_classes: número total de clases
+    Parameters:
+    - y_pred_set: array (n_samples, k) of predicted labels per row
+    - n_classes: total number of classes
 
-    Devuelve:
-    - encoded: array (n_samples,) de valores enteros únicos por fila
+    Returns:
+    - encoded: array (n_samples,) with one integer per row
     """
     binary_matrix = np.zeros((y_pred_set.shape[0], n_classes), dtype=int)
     for i, pred_set in enumerate(y_pred_set):
@@ -96,17 +96,17 @@ def encode_prediction_sets(y_pred_set, n_classes):
 
 def predict_confidence_regions(model, X, y, X_grid, alpha=0.1, random_state=42):
     """
-    Aplica Split Conformal Prediction sobre una malla para clasificación.
+    Applies split conformal prediction on a grid for classification.
 
-    Parámetros:
-    - model: Clasificador sklearn
-    - X, y: Datos originales
-    - X_grid: Datos sobre los que predecir las regiones (malla)
-    - alpha: Nivel de error (1 - nivel de confianza)
-    - random_state: Semilla para reproducibilidad
+    Parameters:
+    - model: scikit-learn classifier
+    - X, y: original data
+    - X_grid: grid of points on which to predict the regions
+    - alpha: error level (1 - confidence level)
+    - random_state: random seed for reproducibility
 
-    Devuelve:
-    - y_pred_set_mesh: Conjuntos predichos para la malla
+    Returns:
+    - y_pred_set_mesh: predicted sets on the grid
     """
     mapie = SplitConformalClassifier(estimator=model, confidence_level=1 - alpha, prefit=False)
     X_train, X_cal, _, y_train, y_cal, _ = train_conformalize_test_split(
@@ -127,26 +127,26 @@ def estimate_mi_from_conformal_prediction_sets(
     random_state=42
 ):
     """
-    Estima la información mutua I(Y;X) usando Split Conformal Prediction sobre clasificación.
+    Estimates the mutual information I(Y;X) using split conformal prediction for classification.
 
-    Parámetros:
-    - X, y: Datos completos.
-    - model: Clasificador sklearn.
-    - alpha: Nivel de error (1 - nivel de confianza).
-    - test_size: Tamaño del conjunto de test.
-    - cal_size: Tamaño del conjunto de calibración.
-    - random_state: Semilla.
+    Parameters:
+    - X, y: full dataset.
+    - model: scikit-learn classifier.
+    - alpha: error level (1 - confidence level).
+    - test_size: size of the test set.
+    - cal_size: size of the calibration set.
+    - random_state: random seed.
 
-    Devuelve:
-    - mi: Información mutua estimada.
-    - h_y: Entropía marginal H(Y).
-    - h_y_given_x: Entropía condicional H(Y|X) basada en prediction sets.
+    Returns:
+    - mi: estimated mutual information.
+    - h_y: marginal entropy H(Y).
+    - h_y_given_x: conditional entropy H(Y|X) from the prediction sets.
     """
 
     if not is_classifier(model):
-        raise ValueError("Este método solo es compatible con clasificadores.")
+        raise ValueError("This method only supports classifiers.")
 
-    # Split del dataset
+    # Split the dataset
     X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
         X, y,
         train_size=1 - cal_size - test_size,
@@ -157,7 +157,7 @@ def estimate_mi_from_conformal_prediction_sets(
 
     model.fit(X_train, y_train)
 
-    # Obtener prediction sets con Mapie
+    # Get prediction sets with MAPIE
     scc = SplitConformalClassifier(
         estimator=model,
         confidence_level=1 - alpha,
@@ -168,15 +168,15 @@ def estimate_mi_from_conformal_prediction_sets(
 
     n_classes = len(np.unique(y))
 
-    # Calcular H(Y)
+    # Compute H(Y)
     counts = np.array(list(Counter(y_test).values()))
     probs_y = counts / counts.sum()
     h_y = entropy(probs_y, base=2)
 
-    # Calcular H(Y|X) a partir de prediction sets (con soporte para arrays y máscaras booleanas)
+    # Compute H(Y|X) from the prediction sets (arrays or boolean masks)
     entropies = []
     for pred in y_pred_set:
-        # Asegurar que el prediction set sea una lista de índices de clase
+        # Make sure the prediction set is a list of class indices
         if isinstance(pred, np.ndarray):
             if pred.dtype == bool:
                 pred = np.where(pred)[0].tolist()
@@ -188,7 +188,7 @@ def estimate_mi_from_conformal_prediction_sets(
             pred = [int(pred)]
 
         if len(pred) == 0:
-            continue  # Evita división por cero si el set está vacío
+            continue  # Avoid division by zero for empty sets
 
         probs = np.zeros(n_classes)
         for c in pred:
@@ -197,7 +197,7 @@ def estimate_mi_from_conformal_prediction_sets(
 
     h_y_given_x = np.mean(entropies)
 
-    # MI estimada
+    # Estimated MI
     mi = h_y - h_y_given_x
     return mi, h_y, h_y_given_x
 
@@ -211,12 +211,12 @@ def estimate_mi_with_uncertainty(
     random_state=42
 ):
     """
-    Estima la información mutua con intervalos de incertidumbre usando Conformal Prediction.
+    Estimates mutual information with uncertainty intervals using conformal prediction.
 
-    Devuelve:
-    - mi_central: estimación central con alpha medio
-    - mi_low: límite inferior con alpha mayor
-    - mi_high: límite superior con alpha menor
+    Returns:
+    - mi_central: central estimate at the middle alpha
+    - mi_low: lower bound at the larger alpha
+    - mi_high: upper bound at the smaller alpha
     """
     results = {}
     for alpha in alphas:
@@ -250,21 +250,21 @@ def estimate_mi_kraskov_conformal(
     random_state=42
 ):
     """
-    Estima la información mutua I(X;Y) aplicando Conformal Prediction y propagando la incertidumbre.
-    Funciona para tareas de regresión y clasificación.
+    Estimates the mutual information I(X;Y) by applying conformal prediction and propagating the uncertainty.
+    Works for regression and classification tasks.
 
-    Devuelve:
-    - MI estimada
+    Returns:
+    - estimated MI
     - H(Y)
     - H(Y|X)
-    - coverage empírico
+    - empirical coverage
     """
     from sklearn.utils.multiclass import type_of_target
 
     is_reg = is_regressor(model)
     is_clf = is_classifier(model)
     if not (is_reg or is_clf):
-        raise ValueError("El modelo debe ser un regresor o clasificador válido de sklearn.")
+        raise ValueError("The model must be a valid scikit-learn regressor or classifier.")
 
     X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
         X, y, train_size=1 - cal_size - test_size,
@@ -340,7 +340,7 @@ def estimate_mi_cp_radius(
     random_state=42
 ):
     """
-    Estima la información mutua usando KNeighbors + Conformal Prediction en lugar del radio de Kraskov.
+    Estimates mutual information using k-nearest neighbours and conformal prediction instead of the Kraskov radius.
     """
     X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
         X, y, train_size=1 - cal_size - test_size,

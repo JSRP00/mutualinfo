@@ -4,21 +4,21 @@ import numpy as np
 
 def bootstrap_ci(estimate_func, x, y, n_bootstraps=1000, alpha=0.05, seed=None, **kwargs):
     """
-    Calcula un intervalo de confianza bootstrap para una función de estimación de MI.
+    Computes a bootstrap confidence interval for an MI estimation function.
 
-    Parámetros:
-    ------------
-    estimate_func : función que calcula I(X;Y) → por ejemplo, estimate_mi_kraskov
+    Parameters
+    ----------
+    estimate_func : function that computes I(X;Y), e.g. estimate_mi_kraskov
     x : array-like, variable X
     y : array-like, variable Y
-    n_bootstraps : int, número de remuestreos
-    alpha : float, nivel de significación (por defecto 0.05 → IC del 95%)
-    seed : int o None, semilla para reproducibilidad
-    **kwargs : argumentos extra para la función estimate_func
+    n_bootstraps : int, number of resamples
+    alpha : float, significance level (default 0.05, i.e. a 95% interval)
+    seed : int or None, random seed for reproducibility
+    **kwargs : extra arguments passed to estimate_func
 
-    Retorna:
-    --------
-    (float, float) → límite inferior y superior del intervalo de confianza
+    Returns
+    -------
+    (float, float) : lower and upper bounds of the confidence interval
     """
     if seed is not None:
         np.random.seed(seed)

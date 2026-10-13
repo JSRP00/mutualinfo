@@ -10,7 +10,7 @@ from mutualinfo.utils import train_conformalize_test_split
 
 def regression_coverage_score_manual(y_true, intervals):
     """
-    Calcula la cobertura empírica: proporción de veces que y_true está dentro del intervalo.
+    Computes the empirical coverage: the proportion of times y_true falls inside the interval.
     """
     lower_bounds = intervals[:, 0]
     upper_bounds = intervals[:, 1]
@@ -28,36 +28,36 @@ def estimate_mi_kraskov_conformal(
     random_state=42
 ):
     """
-    Estima la información mutua I(Y;X) utilizando Conformal Prediction con modelos KNN, tanto en clasificación como regresión.
+    Estimates the mutual information I(Y;X) using conformal prediction with KNN models, for both classification and regression.
 
-    Parámetros:
-    - X, y: datos de entrada (arrays).
-    - model: modelo base (KNNClassifier o Regressor).
-    - alpha: nivel de error (1 - confianza).
-    - task: "classification", "regression" o "auto".
-    - n_bins: número de bins si se discretiza y (para entropía).
-    - test_size, cal_size: proporciones del split.
-    - random_state: semilla de aleatoriedad.
+    Parameters:
+    - X, y: input data (arrays).
+    - model: base model (KNN classifier or regressor).
+    - alpha: error level (1 - confidence).
+    - task: "classification", "regression" or "auto".
+    - n_bins: number of bins when y is discretised (for the entropy).
+    - test_size, cal_size: split proportions.
+    - random_state: random seed.
 
-    Devuelve:
-    - mi: información mutua estimada.
-    - h_y: entropía marginal de Y.
-    - h_y_given_x: entropía condicional estimada.
-    - coverage: cobertura empírica alcanzada.
+    Returns:
+    - mi: estimated mutual information.
+    - h_y: marginal entropy of Y.
+    - h_y_given_x: estimated conditional entropy.
+    - coverage: empirical coverage achieved.
     """
 
-    # Inferencia automática del tipo de tarea si no se especifica
+    # Infer the task type when not given
     if task == "auto":
         task = "regression" if np.issubdtype(y.dtype, np.floating) else "classification"
 
-    # Discretización si es regresión (para calcular H(Y) y H(Y|X))
+    # Discretise y for regression (to compute H(Y) and H(Y|X))
     if task == "regression":
         discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='quantile')
         y_disc = discretizer.fit_transform(y.reshape(-1, 1)).ravel().astype(int)
     else:
         y_disc = y
 
-    # División en train/cal/test
+    # Train / calibration / test split
     X_train, X_cal, X_test, y_train, y_cal, y_test = train_conformalize_test_split(
         X, y_disc,
         train_size=1 - cal_size - test_size,
@@ -74,7 +74,7 @@ def estimate_mi_kraskov_conformal(
     confidence = 1 - alpha
 
     if task == "classification":
-        # Conformal Prediction para clasificación
+        # Conformal prediction for classification
         cp = SplitConformalClassifier(estimator=model, confidence_level=confidence, prefit=True)
         cp.conformalize(X_cal, y_cal)
         _, y_pred_set = cp.predict_set(X_test)
@@ -104,7 +104,7 @@ def estimate_mi_kraskov_conformal(
         coverage = cp.coverage_score(X_test, y_test)
 
     else:
-        # Conformal Prediction para regresión
+        # Conformal prediction for regression
         cp = SplitConformalRegressor(estimator=model, confidence_level=confidence, prefit=True)
         cp.conformalize(X_cal, y_cal)
         _, intervals = cp.predict_interval(X_test)
@@ -113,7 +113,7 @@ def estimate_mi_kraskov_conformal(
         pseudo_entropy = np.log(lengths + 1e-8)  # evitar log(0)
         h_y_given_x = np.mean(pseudo_entropy)
 
-        # Entropía marginal usando distribución empírica
+        # Marginal entropy from the empirical distribution
         discretizer = KBinsDiscretizer(n_bins=n_bins, encode='ordinal', strategy='quantile')
         y_test_binned = discretizer.fit_transform(y_test.reshape(-1, 1)).ravel()
         counts = np.array(list(Counter(y_test_binned).values()))
