@@ -13,7 +13,7 @@ SEED = 123
 N = 300
 
 def test_kraskov_mi_greater_for_dependent():
-    x_dep, y_dep = generate_dependent_data(n=N, seed=SEED)
+    x_dep, y_dep = generate_dependent_data(n_samples=N, random_state=SEED)
     x_ind, y_ind = generate_independent_data(n=N, seed=SEED)
 
     mi_dep = estimate_mi_kraskov(x_dep, y_dep)
@@ -23,7 +23,7 @@ def test_kraskov_mi_greater_for_dependent():
 
 
 def test_kde_mi_greater_for_dependent():
-    x_dep, y_dep = generate_dependent_data(n=N, seed=SEED)
+    x_dep, y_dep = generate_dependent_data(n_samples=N, random_state=SEED)
     x_ind, y_ind = generate_independent_data(n=N, seed=SEED)
 
     mi_dep = estimate_mi_kde(x_dep, y_dep)
@@ -33,7 +33,7 @@ def test_kde_mi_greater_for_dependent():
 
 
 def test_histogram_mi_greater_for_dependent():
-    x_dep, y_dep = generate_dependent_data(n=N, seed=SEED)
+    x_dep, y_dep = generate_dependent_data(n_samples=N, random_state=SEED)
     x_ind, y_ind = generate_independent_data(n=N, seed=SEED)
 
     mi_dep = estimate_mi_histogram(x_dep, y_dep, bins=15)

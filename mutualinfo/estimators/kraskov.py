@@ -3,6 +3,7 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from scipy.special import digamma
+from mutualinfo.utils import check_input_shapes
 
 def estimate_mi(x, y, k=3):
     """
@@ -19,10 +20,7 @@ def estimate_mi(x, y, k=3):
     --------
     float : estimación de la información mutua I(X;Y)
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-
-    assert len(x) == len(y), "x e y deben tener el mismo número de muestras"
+    x, y = check_input_shapes(x, y)
 
     n = len(x)
     data = np.hstack((x, y))

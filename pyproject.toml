@@ -1,29 +1,37 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "mutualinfo"
-version = "0.1.0"
-description = "Librería para estimar la información mutua y cuantificar su incertidumbre"
-authors = [
-    { name = "Jorge Santiago", email = "jrodriguezp.5@alumni.unav.es" }
-]
+version = "0.1.1"
+description = "Mutual information estimation and uncertainty quantification in Python"
+authors = [{ name = "Jorge Santiago Rodríguez Peñalosa" }]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.21",
     "scipy>=1.7",
     "scikit-learn>=1.0",
-    "matplotlib>=3.5"
+    "matplotlib>=3.5",
+    "mapie>=1.5",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 
-[tool.setuptools]
-packages = ["mutualinfo"]
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
 
-[tool.setuptools.package-data]
-"mutualinfo" = ["*.py"]
+[project.urls]
+Repository = "https://github.com/JSRP00/mutualinfo"
+
+[tool.setuptools.packages.find]
+include = ["mutualinfo*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -11,6 +11,7 @@ def test_mi_with_conformal_prediction_sets():
         n_features=4,
         n_classes=3,
         n_informative=3,
+        n_redundant=0,
         random_state=42
     )
     model = KNeighborsClassifier(n_neighbors=5)
